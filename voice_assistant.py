@@ -34,7 +34,7 @@ def get_audio():
         except Exception as e:
             print("Exception: " + str(e))
 
-    return said
+    return said.lower()
 
 
 def authenticate_google():
@@ -83,7 +83,7 @@ def get_events(day, service):
             if int(start_time.split("+")[0]) < 12:
                 start_time = start_time + "am"
             else:
-                start_time = str(int(start_time.split("+")[0])-12)
+                start_time = str(int(start_time.split("+")[0])-12) + start_time.split(":")[1]
                 start_time = start_time + "pm"
 
             speak(event["summary"] + " at " + start_time)
@@ -150,23 +150,32 @@ def note(text):
 
 	subprocess.Popen(["notepad.exe", file_name])
 
+
+WAKE = "activate"
 SERVICE = authenticate_google()
 print("Start")
-text = get_audio().lower()
 
-CALENDAR_STRS = ["what do i have", "do i have plans", "am i busy"]
-for phrase in CALENDAR_STRS:
-    if phrase in text:
-        date = get_date(text)
-        if date:
-            get_events(date, SERVICE)
-        else:
-            speak("Please Try Again")
+while True:
+    print("Listening")
+    text = get_audio()
 
-NOTE_STRS = ["make a note", "write this down", "remember this"]
-for phrase in NOTE_STRS:
-    if phrase in text:
-    	speak("What would you like me to write down?")
-    	note_text = get_audio().lower()
-    	note(note_text)
-    	speak("I've made a note of that.")
+    if text.count(WAKE) > 0:
+        speak("I am ready")
+        text = get_audio()
+
+        CALENDAR_STRS = ["what do i have", "do i have plans", "am i busy"]
+        for phrase in CALENDAR_STRS:
+            if phrase in text:
+                date = get_date(text)
+                if date:
+                    get_events(date, SERVICE)
+                else:
+                    speak("I don't understand")
+
+        NOTE_STRS = ["make a note", "write this down", "remember this"]
+        for phrase in NOTE_STRS:
+            if phrase in text:
+                speak("What would you like me to write down?")
+                note_text = get_audio()
+                note(note_text)
+                speak("I've made a note of that.")
